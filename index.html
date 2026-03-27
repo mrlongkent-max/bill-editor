@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hóa Đơn Bán Hàng</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --panel: #16213e;
+    --card: #0f3460;
+    --accent: #e94560;
+    --accent2: #f5a623;
+    --text: #eaeaea;
+    --muted: #8892a4;
+    --border: #2a3a5c;
+    --input-bg: #0d2137;
+    --receipt-bg: #fffef8;
+    --receipt-text: #1a1a1a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ===== LAYOUT ===== */
+  .app {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    min-height: 100vh;
+  }
+
+  /* ===== LEFT PANEL - FORM ===== */
+  .form-panel {
+    padding: 32px;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+  }
+
+  .form-panel h1 {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+  .form-panel .subtitle {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 28px;
+  }
+
+  .section {
+    margin-bottom: 24px;
+  }
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent2);
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .field-grid.full { grid-template-columns: 1fr; }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .field label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .field input {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  .field input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  /* ===== ITEMS TABLE ===== */
+  .items-header {
+    display: grid;
+    grid-template-columns: 1fr 52px 90px 90px 30px;
+    gap: 6px;
+    margin-bottom: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    padding: 0 2px;
+  }
+
+  .item-row {
+    display: grid;
+    grid-template-columns: 1fr 52px 90px 90px 30px;
+    gap: 6px;
+    margin-bottom: 7px;
+    align-items: center;
+  }
+  .item-row input {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 8px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 12px;
+    width: 100%;
+    transition: border-color 0.2s;
+  }
+  .item-row input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .item-row input[type=number] { text-align: center; }
+  .t-tien {
+    font-size: 12px;
+    color: var(--accent2);
+    font-weight: 600;
+    text-align: right;
+    padding-right: 4px;
+  }
+
+  .btn-del {
+    background: none;
+    border: none;
+    color: #e94560aa;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px;
+    line-height: 1;
+    transition: color 0.2s;
+  }
+  .btn-del:hover { color: var(--accent); }
+
+  .btn-add {
+    width: 100%;
+    padding: 9px;
+    background: transparent;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: all 0.2s;
+    font-weight: 600;
+  }
+  .btn-add:hover {
+    border-color: var(--accent2);
+    color: var(--accent2);
+    background: #f5a62310;
+  }
+
+  .btn-print {
+    width: 100%;
+    padding: 12px;
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+  .btn-print:hover {
+    background: #c73652;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px #e9456044;
+  }
+
+  /* ===== RIGHT PANEL - PREVIEW ===== */
+  .preview-panel {
+    background: #e8e6df;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 16px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .preview-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #888;
+    margin-bottom: 16px;
+  }
+
+  /* ===== RECEIPT ===== */
+  .receipt {
+    width: 300px;
+    background: var(--receipt-bg);
+    font-family: 'Courier New', monospace;
+    font-size: 11.5px;
+    color: var(--receipt-text);
+    padding: 20px 16px;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.25);
+    position: relative;
+  }
+
+  /* Torn edge top */
+  .receipt::before {
+    content: '';
+    position: absolute;
+    top: -6px; left: 0; right: 0;
+    height: 12px;
+    background: repeating-linear-gradient(90deg, #e8e6df 0px, #e8e6df 8px, transparent 8px, transparent 16px);
+  }
+  /* Torn edge bottom */
+  .receipt::after {
+    content: '';
+    position: absolute;
+    bottom: -6px; left: 0; right: 0;
+    height: 12px;
+    background: repeating-linear-gradient(90deg, #e8e6df 0px, #e8e6df 8px, transparent 8px, transparent 16px);
+  }
+
+  .receipt-shop {
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .receipt-shop-name {
+    font-size: 16px;
+    font-weight: 900;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+  }
+  .receipt-shop-addr {
+    font-size: 10px;
+    color: #444;
+    line-height: 1.5;
+    margin-top: 3px;
+  }
+
+  .receipt-divider {
+    border: none;
+    border-top: 1px dashed #aaa;
+    margin: 8px 0;
+  }
+  .receipt-divider-solid {
+    border: none;
+    border-top: 1px solid #333;
+    margin: 6px 0;
+  }
+
+  .receipt-title {
+    text-align: center;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .receipt-table-no {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    margin: 3px 0 6px;
+  }
+
+  .receipt-meta {
+    font-size: 10px;
+    line-height: 1.8;
+  }
+  .receipt-meta .row {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .receipt-items-header {
+    display: grid;
+    grid-template-columns: 1fr 30px 58px 60px;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    padding: 4px 0 3px;
+    border-bottom: 1px solid #333;
+  }
+  .receipt-items-header span:not(:first-child) { text-align: right; }
+
+  .receipt-item {
+    display: grid;
+    grid-template-columns: 1fr 30px 58px 60px;
+    font-size: 10.5px;
+    padding: 3px 0;
+    border-bottom: 1px dotted #ccc;
+  }
+  .receipt-item span:not(:first-child) { text-align: right; }
+
+  .receipt-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0 4px;
+  }
+  .receipt-total .label {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+  }
+  .receipt-total .amount {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+  }
+
+  .receipt-footer {
+    text-align: center;
+    font-size: 10px;
+    color: #555;
+    margin-top: 6px;
+    line-height: 1.6;
+  }
+
+  /* ===== PRINT STYLES ===== */
+  @media print {
+    body { background: white; }
+    .form-panel, .preview-label { display: none !important; }
+    .app { display: block; }
+    .preview-panel {
+      background: white;
+      padding: 0;
+      height: auto;
+      position: static;
+    }
+    .receipt {
+      box-shadow: none;
+      margin: 0 auto;
+    }
+    .receipt::before, .receipt::after { display: none; }
+  }
+
+  @media (max-width: 768px) {
+    .app { grid-template-columns: 1fr; }
+    .preview-panel { position: static; height: auto; }
+    .field-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== FORM PANEL ===== -->
+  <div class="form-panel">
+    <h1>🧾 Hóa Đơn Bán Hàng</h1>
+    <div class="subtitle">Điền thông tin bên dưới — bill tự cập nhật theo thời gian thực</div>
+
+    <!-- Thông tin cửa hàng -->
+    <div class="section">
+      <div class="section-title">🏪 Thông tin cửa hàng</div>
+      <div class="field-grid full" style="gap:10px">
+        <div class="field">
+          <label>Tên quán</label>
+          <input type="text" id="shopName" value="QUÁN BIA THANH LOAN">
+        </div>
+        <div class="field">
+          <label>Địa chỉ dòng 1</label>
+          <input type="text" id="addr1" value="Tòa nhà A4 - Đường Vũ Ngọc Phan">
+        </div>
+        <div class="field">
+          <label>Địa chỉ dòng 2</label>
+          <input type="text" id="addr2" value="Láng Hạ - Đống Đa - Hà Nội">
+        </div>
+        <div class="field">
+          <label>Số điện thoại</label>
+          <input type="text" id="phone" value="ĐT: 0912.345.678 - 0987.654.321">
+        </div>
+      </div>
+    </div>
+
+    <!-- Thông tin hóa đơn -->
+    <div class="section">
+      <div class="section-title">📋 Thông tin hóa đơn</div>
+      <div class="field-grid">
+        <div class="field">
+          <label>Số bàn</label>
+          <input type="text" id="tableNo" value="Bàn 03">
+        </div>
+        <div class="field">
+          <label>Số hóa đơn</label>
+          <input type="text" id="billNo" value="001900015">
+        </div>
+        <div class="field">
+          <label>Ngày</label>
+          <input type="text" id="billDate" value="">
+        </div>
+        <div class="field">
+          <label>Thu ngân</label>
+          <input type="text" id="cashier" value="Thanh Loan">
+        </div>
+        <div class="field">
+          <label>Giờ vào</label>
+          <input type="text" id="timeIn" value="">
+        </div>
+        <div class="field">
+          <label>Giờ ra</label>
+          <input type="text" id="timeOut" value="">
+        </div>
+      </div>
+    </div>
+
+    <!-- Mặt hàng -->
+    <div class="section">
+      <div class="section-title">🍺 Mặt hàng</div>
+      <div class="items-header">
+        <span>Tên mặt hàng</span>
+        <span style="text-align:center">SL</span>
+        <span style="text-align:right">Đơn giá</span>
+        <span style="text-align:right">Thành tiền</span>
+        <span></span>
+      </div>
+      <div id="itemsContainer"></div>
+      <button class="btn-add" onclick="addItem()">+ Thêm mặt hàng</button>
+    </div>
+
+    <button class="btn-print" onclick="window.print()">🖨️ In hóa đơn</button>
+  </div>
+
+  <!-- ===== PREVIEW PANEL ===== -->
+  <div class="preview-panel">
+    <div class="preview-label">Xem trước</div>
+    <div class="receipt" id="receipt">
+      <div class="receipt-shop">
+        <div class="receipt-shop-name" id="r-shopName"></div>
+        <div class="receipt-shop-addr">
+          <div id="r-addr1"></div>
+          <div id="r-addr2"></div>
+          <div id="r-phone"></div>
+        </div>
+      </div>
+      <hr class="receipt-divider">
+      <div class="receipt-title">HÓA ĐƠN BÁN HÀNG</div>
+      <div class="receipt-table-no" id="r-tableNo"></div>
+      <hr class="receipt-divider-solid">
+      <div class="receipt-meta">
+        <div class="row"><span id="r-date"></span><span id="r-billNo"></span></div>
+        <div class="row"><span id="r-cashier"></span></div>
+        <div class="row"><span id="r-timeIn"></span><span id="r-timeOut"></span></div>
+      </div>
+      <hr class="receipt-divider-solid">
+      <div class="receipt-items-header">
+        <span>Mặt hàng</span><span>SL</span><span>Giá</span><span>T.Tiền</span>
+      </div>
+      <div id="r-items"></div>
+      <hr class="receipt-divider-solid">
+      <div class="receipt-total">
+        <span class="label">Tổng:</span>
+        <span class="amount" id="r-total"></span>
+      </div>
+      <hr class="receipt-divider">
+      <div class="receipt-footer">
+        Cảm ơn Quý khách. Hẹn gặp lại!<br>
+        <span id="r-footerPhone"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DEFAULT ITEMS =====
+let items = [
+  { name: "Bia Hà Nội lon",   qty: 3, price: 15000 },
+  { name: "Bia Tiger chai",   qty: 2, price: 25000 },
+  { name: "Lạc rang muối",    qty: 1, price: 20000 },
+  { name: "Đậu phụ chiên",    qty: 2, price: 30000 },
+  { name: "Nem rán",          qty: 1, price: 35000 },
+  { name: "Nước ngọt Pepsi",  qty: 2, price: 15000 },
+];
+
+// Set default date/time
+function pad(n) { return String(n).padStart(2, '0'); }
+const now = new Date();
+document.getElementById('billDate').value =
+  `${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()}`;
+document.getElementById('timeIn').value =
+  `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+document.getElementById('timeOut').value =
+  `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+// ===== FORMAT NUMBER =====
+function fmt(n) {
+  return Number(n).toLocaleString('vi-VN') + '';
+}
+
+// ===== RENDER ITEM ROWS IN FORM =====
+function renderFormItems() {
+  const container = document.getElementById('itemsContainer');
+  container.innerHTML = '';
+  items.forEach((item, i) => {
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    const tt = item.qty * item.price;
+    row.innerHTML = `
+      <input type="text" placeholder="Tên mặt hàng" value="${item.name}"
+        oninput="items[${i}].name=this.value;updateReceipt()">
+      <input type="number" min="0" value="${item.qty}"
+        oninput="items[${i}].qty=parseInt(this.value)||0;updateTT(${i});updateReceipt()">
+      <input type="number" min="0" value="${item.price}"
+        oninput="items[${i}].price=parseInt(this.value)||0;updateTT(${i});updateReceipt()">
+      <div class="t-tien" id="tt-${i}">${fmt(tt)}</div>
+      <button class="btn-del" onclick="removeItem(${i})" title="Xóa">×</button>
+    `;
+    container.appendChild(row);
+  });
+}
+
+function updateTT(i) {
+  const el = document.getElementById(`tt-${i}`);
+  if (el) el.textContent = fmt(items[i].qty * items[i].price);
+}
+
+function addItem() {
+  items.push({ name: '', qty: 1, price: 0 });
+  renderFormItems();
+  updateReceipt();
+}
+
+function removeItem(i) {
+  items.splice(i, 1);
+  renderFormItems();
+  updateReceipt();
+}
+
+// ===== UPDATE RECEIPT PREVIEW =====
+function updateReceipt() {
+  const get = id => document.getElementById(id)?.value || '';
+
+  document.getElementById('r-shopName').textContent = get('shopName');
+  document.getElementById('r-addr1').textContent = get('addr1');
+  document.getElementById('r-addr2').textContent = get('addr2');
+  document.getElementById('r-phone').textContent = get('phone');
+  document.getElementById('r-tableNo').textContent = get('tableNo');
+  document.getElementById('r-billNo').textContent = 'Số: ' + get('billNo');
+  document.getElementById('r-date').textContent = 'Ngày: ' + get('billDate');
+  document.getElementById('r-cashier').textContent = 'Thu ngân: ' + get('cashier');
+  document.getElementById('r-timeIn').textContent = 'Giờ vào: ' + get('timeIn');
+  document.getElementById('r-timeOut').textContent = 'Giờ ra: ' + get('timeOut');
+  document.getElementById('r-footerPhone').textContent = get('phone');
+
+  // Items
+  const container = document.getElementById('r-items');
+  container.innerHTML = '';
+  let total = 0;
+  items.forEach(item => {
+    if (!item.name && !item.price) return;
+    const tt = item.qty * item.price;
+    total += tt;
+    const row = document.createElement('div');
+    row.className = 'receipt-item';
+    row.innerHTML = `
+      <span>${item.name}</span>
+      <span>${item.qty}</span>
+      <span>${fmt(item.price)}</span>
+      <span>${fmt(tt)}</span>
+    `;
+    container.appendChild(row);
+  });
+
+  document.getElementById('r-total').textContent = fmt(total) + 'đ';
+}
+
+// ===== LIVE UPDATE ON ANY INPUT =====
+document.querySelectorAll('input').forEach(el => {
+  el.addEventListener('input', updateReceipt);
+});
+
+// ===== INIT =====
+renderFormItems();
+updateReceipt();
+</script>
+</body>
+</html>
